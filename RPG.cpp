@@ -33,6 +33,7 @@ quantos ataques especiais ocorreram. */
 #include <string>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
 using namespace std;
 
 class Personagem {
@@ -47,6 +48,8 @@ class Personagem {
         int _danoCausado;
         int _numAtaquesEspeciais;
         int _sangramento;
+        vector<Personagem*> _derrotados;
+
     public:
         Personagem(string nome, int hp, int atk, int def) : _nome(nome), _hp(hp), _hpAtual(hp), _atk(atk), _atkAtual(atk), _def(def), _defAtual(def),    _danoCausado(0), _numAtaquesEspeciais(0), _sangramento(0){}
         void exibir() {
@@ -54,6 +57,18 @@ class Personagem {
             cout << "HP: " << _hp << endl;
             cout << "ATK: " << _atk << endl;
             cout << "DEF: " << _def << endl;
+        }
+        void exibirAtual()
+        {
+            cout << "Nome: " << _nome << endl;
+            cout << "HP: " << _hpAtual << endl;
+            cout << "ATK: " << _atkAtual << endl;
+            cout << "DEF: " << _defAtual << endl;
+            cout << "Derrotados: " << endl;
+            int num = _derrotados.size();
+            for(int i = 0; i < num; i++) {
+                cout << _derrotados[i]->_nome << endl;
+            }
         }
         void atacar(Personagem *p) {
             if((rand() % 20 + 1) == 20){
@@ -66,7 +81,7 @@ class Personagem {
             }
         }
         int receberDano(int dano) {
-            _hp -= dano - _def;
+            _hpAtual -= dano - _def;
             return dano - _def;
         }
         void receberSangramento()
@@ -77,8 +92,26 @@ class Personagem {
             receberDano(_sangramento);
             _sangramento--;
         }
+        void reduzirDefesa(int valor) {
+            _defAtual -= valor;
+        }
+        void resetarDefesa() {
+            _defAtual = _def;
+        }
+        void reduzirAtaque(int valor) {
+            _atkAtual -= valor;
+        }
+        void resetarAtaque() {
+            _atkAtual = _atk;
+        }
         void AtaqueEspecial(Personagem *p) {
-            
+            _danoCausado += p->receberDano(_atk);
+        }
+        void derrotar(Personagem *p) {
+            _derrotados.push_back(p);
+        }
+        bool estaVivo() {
+            return _hpAtual > 0;
         }
 };
 
@@ -94,15 +127,99 @@ class Guerreiro : public Personagem {
             if((rand() % 20 + 1) == 20){
                 p->receberSangramento();
             }
-            _danoCausado += p->receberDano(_atk * 2);
+            _atkAtual += 5;
+            _danoCausado += p->receberDano(_atk);
         }
 };
 
+class Ladino : public Personagem {
+    public:
+        Ladino(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
+        void exibir() {
+            Personagem::exibir();
+            cout << "Ataque especial: Golpe Critico" << endl;
+        }
 
+        void AtaqueEspecial(Personagem *p) {
+            p->receberSangramento();
+            _danoCausado += p->receberDano(_atk);
+        }
+};
+
+class Clerigo : public Personagem {
+    public:
+        Clerigo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
+        void exibir() {
+            Personagem::exibir();
+            cout << "Ataque especial: Cura" << endl;
+        }
+
+        void AtaqueEspecial() {
+            _hpAtual += _atk;
+        }
+};
+
+class Bruxo : public Personagem {
+    public:
+        Bruxo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
+        void exibir() {
+            Personagem::exibir();
+            cout << "Ataque especial: Escudo Magico" << endl;
+        }
+
+        void AtaqueEspecial(Personagem *p) {
+            if((rand() % 20 + 1) == 20){
+                p->receberSangramento();
+            }
+            _defAtual += 5;
+            _danoCausado += p->receberDano(_atk);
+        }
+};
+
+class Bardo : public Personagem {
+    public:
+        Bardo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
+        void exibir() {
+            Personagem::exibir();
+            cout << "Ataque especial: Encantar" << endl;
+        }
+
+        void AtaqueEspecial(Personagem *p) {
+            if((rand() % 20 + 1) == 20){
+                p->receberSangramento();
+            }
+            p->reduzirAtaque(5);
+            _danoCausado += p->receberDano(_atk);
+        }
+};
+
+class Arqueiro : public Personagem {
+    public:
+        Arqueiro(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
+        void exibir() {
+            Personagem::exibir();
+            cout << "Ataque especial: Flecha Perfurante" << endl;
+        }
+
+        void AtaqueEspecial(Personagem *p) {
+            if((rand() % 20 + 1) == 20){
+                p->receberSangramento();
+            }
+            p->reduzirDefesa(5);
+            _danoCausado += p->receberDano(_atk);
+        }
+};
+
+class JogoRPG {
+};
 
 int main(){
     srand(time(NULL));
     Guerreiro g1("Guerreiro 1", 100, 10, 5);
-    g1.exibir();
+    Guerreiro g2("Guerreiro 2", 100, 10, 5);
+    Bruxo b1("Bruxo 1", 100, 10, 5);
+    b1.derrotar(&g1);
+    b1.derrotar(&g2);
+    b1.exibirAtual();
     return 0;
 }
