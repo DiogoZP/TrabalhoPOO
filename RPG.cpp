@@ -70,14 +70,33 @@ class Personagem {
                 cout << _derrotados[i]->_nome << endl;
             }
         }
+        void resetar() {
+            _hpAtual = _hp;
+            _atkAtual = _atk;
+            _defAtual = _def;
+            _danoCausado = 0;
+            _numAtaquesEspeciais = 0;
+            _sangramento = 0;
+        }
+        int getDanoCausado() {
+            return _danoCausado;
+        }
+        string getNome() {
+            return _nome;
+        }
+        int getSangramento() {
+            return _sangramento;
+        }
         void atacar(Personagem *p) {
             if((rand() % 20 + 1) == 20){
                 _numAtaquesEspeciais++;
                 AtaqueEspecial(p);
             }
             else {
-            p->_hp -= _atk - p->_def;
-            _danoCausado += _atk - p->_def;
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " golpeou causando " << dano << " de dano." << endl;
+            getchar();
             }
         }
         int receberDano(int dano) {
@@ -105,7 +124,7 @@ class Personagem {
             _atkAtual = _atk;
         }
         void AtaqueEspecial(Personagem *p) {
-            _danoCausado += p->receberDano(_atk);
+            _danoCausado += p->receberDano(_atkAtual);
         }
         void derrotar(Personagem *p) {
             _derrotados.push_back(p);
@@ -128,7 +147,10 @@ class Guerreiro : public Personagem {
                 p->receberSangramento();
             }
             _atkAtual += 5;
-            _danoCausado += p->receberDano(_atk);
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " usou Furia e causou " << dano << " de dano." << endl;
+            getchar();
         }
 };
 
@@ -142,7 +164,10 @@ class Ladino : public Personagem {
 
         void AtaqueEspecial(Personagem *p) {
             p->receberSangramento();
-            _danoCausado += p->receberDano(_atk);
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " usou Golpe Critico e causou " << dano << " de dano." << endl;
+            getchar();
         }
 };
 
@@ -155,7 +180,9 @@ class Clerigo : public Personagem {
         }
 
         void AtaqueEspecial() {
-            _hpAtual += _atk;
+            _hpAtual += _atkAtual;
+            cout << _nome << " usou Cura e recuperou " << _atkAtual << " de vida." << endl;
+            getchar();
         }
 };
 
@@ -172,7 +199,10 @@ class Bruxo : public Personagem {
                 p->receberSangramento();
             }
             _defAtual += 5;
-            _danoCausado += p->receberDano(_atk);
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " usou Escudo Magico recebendo 5 de defesa e causou " << dano << " de dano." << endl;
+            getchar();
         }
 };
 
@@ -189,7 +219,10 @@ class Bardo : public Personagem {
                 p->receberSangramento();
             }
             p->reduzirAtaque(5);
-            _danoCausado += p->receberDano(_atk);
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " usou Encantar reduzindo o ataque do inimigo em 5 e causou " << dano << " de dano." << endl;
+            getchar();
         }
 };
 
@@ -206,20 +239,128 @@ class Arqueiro : public Personagem {
                 p->receberSangramento();
             }
             p->reduzirDefesa(5);
-            _danoCausado += p->receberDano(_atk);
+            int dano = p->receberDano(_atkAtual);
+            _danoCausado += dano;
+            cout << _nome << " usou Flecha Perfurante reduzindo a defesa do inimigo em 5 e causou " << dano << " de dano." << endl;
+            getchar();
         }
 };
 
 class JogoRPG {
+    private:
+    int _numParticipantes;
+    vector<Personagem*> _participantes;
+    public:
+    void iniciarTorneio()
+    {
+        cout << "Digite o numero de participantes: " << endl;
+        cin >> _numParticipantes;
+        for(int i = 0; i < _numParticipantes; i++) {
+            cout << "Digite o nome do personagem: " << endl;
+            string nome;
+            cin >> nome;
+            cout << "Digite o tipo do personagem: " << endl;
+            cout << "1 - Guerreiro" << endl;
+            cout << "2 - Ladino" << endl;
+            cout << "3 - Clerigo" << endl;
+            cout << "4 - Bruxo" << endl;
+            cout << "5 - Bardo" << endl;
+            cout << "6 - Arqueiro" << endl;
+            int tipo;
+            cin >> tipo;
+            switch(tipo) {
+                case 1:
+                    _participantes.push_back(new Guerreiro(nome, 100, 10, 5));
+                    break;
+                case 2:
+                    _participantes.push_back(new Ladino(nome, 100, 10, 5));
+                    break;
+                case 3:
+                    _participantes.push_back(new Clerigo(nome, 100, 10, 5));
+                    break;
+                case 4:
+                    _participantes.push_back(new Bruxo(nome, 100, 10, 5));
+                    break;
+                case 5:
+                    _participantes.push_back(new Bardo(nome, 100, 10, 5));
+                    break;
+                case 6:
+                    _participantes.push_back(new Arqueiro(nome, 100, 10, 5));
+                    break;
+            }
+        }
+    }
+
+    void iniciarCombate()
+    {
+        int numParticipantes = _participantes.size();
+        for(int i = 0; i < numParticipantes; i++) {
+            for(int j = i + 1; j < numParticipantes; j++) {
+                if(_participantes[i]->getNome() != _participantes[j]->getNome() && _participantes[i]->estaVivo() && _participantes[j]->estaVivo()) {
+                    combate(_participantes[i], _participantes[j]);
+                }
+            }
+        }
+    }
+
+    void combate(Personagem *p1, Personagem *p2)
+    {
+        int numRounds = 0;
+        p1->resetar();
+        p2->resetar();
+        int iniciativa = rand() % 2;
+        while(p1->estaVivo() && p2->estaVivo() && numRounds < 10) {
+            if(iniciativa == 0) {
+                p1->atacar(p2);
+                p2->atacar(p1);
+            }
+            else {
+                p2->atacar(p1);
+                p1->atacar(p2);
+            }
+            if(p1->getSangramento() > 0) {
+                p1->sangrar();
+            }
+            if(p2->getSangramento() > 0) {
+                p2->sangrar();
+            }
+            numRounds++;
+        }
+        if(p1->estaVivo() && p2->estaVivo() && p1->getDanoCausado() != p2->getDanoCausado()) {
+            if(p1->getDanoCausado() > p2->getDanoCausado()) {
+                p1->derrotar(p2);
+                p1->exibirAtual();
+            }
+            else {
+                p2->derrotar(p1);
+                p2->exibirAtual();
+            }
+        }
+        else if(p1->estaVivo() && !p2->estaVivo()) {
+            p1->derrotar(p2);
+            p1->exibirAtual();
+        }
+        else if(!p1->estaVivo() && p2->estaVivo()) {
+            p2->derrotar(p1);
+            p2->exibirAtual();
+        }
+        else {
+            if(rand() % 2 == 0) {
+                p1->derrotar(p2);
+                p1->exibirAtual();
+            }
+            else {
+                p2->derrotar(p1);
+                p2->exibirAtual();
+            }
+        }
+    }
 };
 
 int main(){
     srand(time(NULL));
-    Guerreiro g1("Guerreiro 1", 100, 10, 5);
-    Guerreiro g2("Guerreiro 2", 100, 10, 5);
-    Bruxo b1("Bruxo 1", 100, 10, 5);
-    b1.derrotar(&g1);
-    b1.derrotar(&g2);
-    b1.exibirAtual();
+    JogoRPG jogo;
+    jogo.iniciarTorneio();
+    jogo.iniciarCombate();
     return 0;
 }
