@@ -124,7 +124,8 @@ class Personagem {
             _sangramento = rand() % 6 + 2;
         }
         void sangrar() {
-            receberDano(_sangramento);
+            _hpAtual -= _sangramento;
+            cout << _nome << " sangrou perdendo " << _sangramento << " de vida." << endl;
             _sangramento--;
         }
         void reduzirDefesa(int valor) {
@@ -335,19 +336,25 @@ class JogoRPG {
                 exibirRodadas(p1, p2, numRounds+1);
                 p1->atacar(p2);
                 p2->atacar(p1);
+                if(p1->getSangramento() > 0) {
+                p1->sangrar();
+                }
+                if(p2->getSangramento() > 0) {
+                p2->sangrar();
+                }
                 system("pause");
             }
             else {
                 exibirRodadas(p1, p2, numRounds+1);
                 p2->atacar(p1);
                 p1->atacar(p2);
-                system("pause");
-            }
-            if(p1->getSangramento() > 0) {
+                if(p1->getSangramento() > 0) {
                 p1->sangrar();
-            }
-            if(p2->getSangramento() > 0) {
+                }
+                if(p2->getSangramento() > 0) {
                 p2->sangrar();
+                }
+                system("pause");
             }
             numRounds++;
         }
