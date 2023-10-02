@@ -76,6 +76,9 @@ class Personagem {
             }
             system("pause");
         }
+        void setHpAtual(int hp) {
+            _hpAtual = hp;
+        }
         void resetar() {
             _hpAtual = _hp;
             _atkAtual = _atk;
@@ -325,8 +328,6 @@ class JogoRPG {
     void combate(Personagem *p1, Personagem *p2)
     {
         int numRounds = 0;
-        p1->resetar();
-        p2->resetar();
         srand(rand() % 100 + 1);
         int iniciativa = rand() % 2;
         while(p1->estaVivo() && p2->estaVivo() && numRounds < 10) {
@@ -352,36 +353,46 @@ class JogoRPG {
         }
         if(p1->estaVivo() && p2->estaVivo() && p1->getDanoCausado() != p2->getDanoCausado()) {
             if(p1->getDanoCausado() > p2->getDanoCausado()) {
+                p2->setHpAtual(0);
                 p1->derrotar(p2);
                 cout << p1->getNome() << " venceu!" << endl;
                 p1->exibirAtual();
+                p1->resetar();
             }
             else {
+                p1->setHpAtual(0);
                 p2->derrotar(p1);
                 cout << p2->getNome() << " venceu!" << endl;
                 p2->exibirAtual();
+                p2->resetar();
             }
         }
         else if(p1->estaVivo() && !p2->estaVivo()) {
             p1->derrotar(p2);
             cout << p1->getNome() << " venceu!" << endl;
             p1->exibirAtual();
+            p1->resetar();
         }
         else if(!p1->estaVivo() && p2->estaVivo()) {
             p2->derrotar(p1);
             cout << p2->getNome() << " venceu!" << endl;
             p2->exibirAtual();
+            p2->resetar();
         }
         else {
             if(rand() % 2 == 0) {
+                p2->setHpAtual(0);
                 p1->derrotar(p2);
                 cout << p1->getNome() << " venceu!" << endl;
                 p1->exibirAtual();
+                p1->resetar();
             }
             else {
+                p1->setHpAtual(0);
                 p2->derrotar(p1);
                 cout << p2->getNome() << " venceu!" << endl;
                 p2->exibirAtual();
+                p2->resetar();
             }
         }
     }
