@@ -1,34 +1,3 @@
-/* Crie um jogo de RPG em C++ de acordo com as seguintes instruções:
-O RPG simulará um combate em uma arena entre personagens. Terá (no mínimo) as classes JogoRPG,
-Personagem, e mais 6 classes distintas representando diferentes arquétipos. Por exemplo, Guerreiro(a),
-Bruxo(a), Ladrão, Arqueiro(a), etc.
-A classe Personagem deve ter no mínimo os seguintes atributos:
-Nome do personagem.
-Pontos de vida (VID).
-Pontos de ataque (ATQ).
-Pontos de defesa (DEF).
-Lista de personagens derrotados.
-Cada classe que identifica um arquétipo será derivada da classe Personagem.
-Cada arquétipo terá um ataque especial, exclusivo de sua classe. Este ataque poderá ocorrer,
-aleatoriamente, durante um round de combate. Ou seja, em vez do ataque normal, ocorrerá o ataque
-especial. Este ataque terá um nome específico e causará mais dano do que um ataque normal.
-O ataque especial também poderá causar sangramento, onde o outro personagem sangrará por um número
-de rounds calculado aleatoriamente (mínimo de 2 rounds, máximo de 6 rounds). O sangramento causará
-uma perda (baixa) de vida a cada round, independente do dano atual recebido no round.
-O sangramento deve ser calculado no início de cada round, portanto, um personagem pode ser derrotado
-sem receber dano de ataque no round.
-Caso ambos os personagens fiquem sem vida devido a sangrarem no início do round, um dos dois
-personagens será sorteado para avançar e o outro será considerado derrotado.
-Implemente construtores para inicializar o nome, VID, ATQ e DEF do personagem. Implemente um
-método para exibir as estatísticas do personagem.
-Cada personagem irá armazenar a lista de personagens que derrotou. Use alguma estrutura de dados para
-armazenar cada personagem que foi derrotado.
-Cada combate poderá durar no máximo 10 rounds. Se nenhum dos dois personagens forem derrotados ao
-fim de 10 rounds, o personagem que causou mais dano será considerado o vencedor.
-Ao fim de cada combate seu jogo deve exibir uma tabela com as estatísticas do combate, considerando
-dano efetuado por cada personagem, vida restante de cada personagem, número de rounds ocorridos, e
-quantos ataques especiais ocorreram. */
-
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -39,29 +8,25 @@ using namespace std;
 class Personagem {
     protected: 
         string _nome;
-        int _hp;
-        int _hpAtual;
-        int _atk;
-        int _atkAtual;
-        int _def;
-        int _defAtual;
-        int _danoCausado;
-        int _numAtaquesEspeciais;
-        int _sangramento;
+        int _hp, _hpAtual, _atk, _atkAtual, _def, _defAtual, _danoCausado, _danoRecebido, _danoCausadoTotal, _danoRecebidoTotal, _numAtaquesEspeciais, _numAtaquesEspeciaisTotal, _sangramento;
         vector<Personagem*> _derrotados;
 
     public:
-        Personagem(string nome, int hp, int atk, int def) : _nome(nome), _hp(hp), _hpAtual(hp), _atk(atk), _atkAtual(atk), _def(def), _defAtual(def),    _danoCausado(0), _numAtaquesEspeciais(0), _sangramento(0){}
-        void exibir() {
+        Personagem(string nome, int hp, int atk, int def) : _nome(nome), _hp(hp), _hpAtual(hp), _atk(atk), _atkAtual(atk), _def(def), _defAtual(def), _danoCausado(0), _numAtaquesEspeciais(0), _sangramento(0), _danoCausadoTotal(0), _danoRecebido(0), _danoRecebidoTotal(0), _numAtaquesEspeciaisTotal(0){}
+        void exibirTotal()
+        {
             cout << "Nome: " << _nome << endl;
             cout << "HP: " << _hp << endl;
             cout << "ATK: " << _atk << endl;
             cout << "DEF: " << _def << endl;
+            cout << "Dano causado: " << _danoCausadoTotal << endl;
+            cout << "Dano recebido: " << _danoRecebidoTotal << endl;
+            cout << "Numero de ataques especiais: " << _numAtaquesEspeciaisTotal << endl;
+            cout << "Derrotados: " << endl;
             int num = _derrotados.size();
             for(int i = 0; i < num; i++) {
                 cout << _derrotados[i]->_nome << endl;
             }
-            system("pause");
         }
         void exibirAtual()
         {
@@ -69,12 +34,14 @@ class Personagem {
             cout << "HP: " << _hpAtual << endl;
             cout << "ATK: " << _atkAtual << endl;
             cout << "DEF: " << _defAtual << endl;
+            cout << "Dano causado: " << _danoCausado << endl;
+            cout << "Dano recebido: " << _danoRecebido << endl;
+            cout << "Numero de ataques especiais: " << _numAtaquesEspeciais << endl;
             cout << "Derrotados: " << endl;
             int num = _derrotados.size();
             for(int i = 0; i < num; i++) {
                 cout << _derrotados[i]->_nome << endl;
             }
-            system("pause");
         }
         void setHpAtual(int hp) {
             _hpAtual = hp;
@@ -83,9 +50,13 @@ class Personagem {
             _hpAtual = _hp;
             _atkAtual = _atk;
             _defAtual = _def;
-            _danoCausado = 0;
-            _numAtaquesEspeciais = 0;
             _sangramento = 0;
+            _danoCausadoTotal += _danoCausado;
+            _danoCausado = 0;
+            _danoRecebidoTotal += _danoRecebido;
+            _danoRecebido = 0;
+            _numAtaquesEspeciaisTotal += _numAtaquesEspeciais;
+            _numAtaquesEspeciais = 0;
         }
         int getDanoCausado() {
             return _danoCausado;
@@ -114,9 +85,13 @@ class Personagem {
             cout << _nome << " golpeou causando " << dano << " de dano." << endl;
             }
         }
-        int receberDano(int dano) {
-            _hpAtual -= dano - _def;
-            return dano - _def;
+        int receberDano(int atk) {
+            srand(rand() % 100 + 1);
+            int d = atk - _def + (rand() % 6);
+            if (d < 0) d = 0;
+            _hpAtual -= d;
+            _danoRecebido += d;
+            return d;
         }
         void receberSangramento()
         {
@@ -131,18 +106,11 @@ class Personagem {
         void reduzirDefesa(int valor) {
             _defAtual -= valor;
         }
-        void resetarDefesa() {
-            _defAtual = _def;
-        }
         void reduzirAtaque(int valor) {
             _atkAtual -= valor;
         }
-        void resetarAtaque() {
-            _atkAtual = _atk;
-        }
-        void virtual AtaqueEspecial(Personagem *p) {
-            _danoCausado += p->receberDano(_atkAtual);
-        }
+        void virtual AtaqueEspecial(){}
+        void virtual AtaqueEspecial(Personagem *p) {}
         void derrotar(Personagem *p) {
             _derrotados.push_back(p);
         }
@@ -154,46 +122,35 @@ class Personagem {
 class Guerreiro : public Personagem {
     public:
         Guerreiro(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Furia" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             srand(rand() % 100 + 1);
             if((rand() % 20 + 1) == 20){
                 p->receberSangramento();
+                cout << _nome << " causou sangramento no inimigo." << endl;
             }
-            _atkAtual += 5;
+            _atkAtual += 3;
             int dano = p->receberDano(_atkAtual);
             _danoCausado += dano;
-            cout << _nome << " usou Furia e causou " << dano << " de dano." << endl;
+            cout << _nome << " usou Furia recebendo 3 de ataque e causou " << dano << " de dano." << endl;
         }
 };
 
 class Ladino : public Personagem {
     public:
         Ladino(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Golpe Critico" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             p->receberSangramento();
             int dano = p->receberDano(_atkAtual);
             _danoCausado += dano;
-            cout << _nome << " usou Golpe Critico e causou sangramento e " << dano << " de dano." << endl;
+            cout << _nome << " usou Golpe Critico causando sangramento e " << dano << " de dano." << endl;
         }
 };
 
 class Clerigo : public Personagem {
     public:
         Clerigo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Cura" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             _hpAtual += _atkAtual;
@@ -204,55 +161,46 @@ class Clerigo : public Personagem {
 class Bruxo : public Personagem {
     public:
         Bruxo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Escudo Magico" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             srand(rand() % 100 + 1);
             if((rand() % 20 + 1) == 20){
                 p->receberSangramento();
+                cout << _nome << " causou sangramento no inimigo." << endl;
             }
-            _defAtual += 5;
+            _defAtual += 3;
             int dano = p->receberDano(_atkAtual);
             _danoCausado += dano;
-            cout << _nome << " usou Escudo Magico recebendo 5 de defesa e causou " << dano << " de dano." << endl;
+            cout << _nome << " usou Escudo Magico recebendo 3 de defesa e causou " << dano << " de dano." << endl;
         }
 };
 
 class Bardo : public Personagem {
     public:
         Bardo(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Encantar" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             srand(rand() % 100 + 1);
             if((rand() % 20 + 1) == 20){
                 p->receberSangramento();
+                cout << _nome << " causou sangramento no inimigo." << endl;
             }
-            p->reduzirAtaque(5);
+            p->reduzirAtaque(3);
             int dano = p->receberDano(_atkAtual);
             _danoCausado += dano;
-            cout << _nome << " usou Encantar reduzindo o ataque do inimigo em 5 e causou " << dano << " de dano." << endl;
+            cout << _nome << " usou Encantar reduzindo o ataque do inimigo em 3 e causou " << dano << " de dano." << endl;
         }
 };
 
 class Arqueiro : public Personagem {
     public:
         Arqueiro(string nome, int hp, int atk, int def) : Personagem(nome, hp, atk, def){}
-        void exibir() {
-            Personagem::exibir();
-            cout << "Ataque especial: Flecha Perfurante" << endl;
-        }
 
         void AtaqueEspecial(Personagem *p) override {
             srand(rand() % 100 + 1);
             if((rand() % 20 + 1) == 20){
                 p->receberSangramento();
+                cout << _nome << " causou sangramento no inimigo." << endl;
             }
             p->reduzirDefesa(5);
             int dano = p->receberDano(_atkAtual);
@@ -285,22 +233,22 @@ class JogoRPG {
             cin >> tipo;
             switch(tipo) {
                 case 1:
-                    _participantes.push_back(new Guerreiro(nome, 100, 10, 5));
+                    _participantes.push_back(new Guerreiro(nome, 100, 15, 5));
                     break;
                 case 2:
-                    _participantes.push_back(new Ladino(nome, 100, 10, 5));
+                    _participantes.push_back(new Ladino(nome, 100, 15, 5));
                     break;
                 case 3:
-                    _participantes.push_back(new Clerigo(nome, 100, 10, 5));
+                    _participantes.push_back(new Clerigo(nome, 100, 15, 5));
                     break;
                 case 4:
-                    _participantes.push_back(new Bruxo(nome, 100, 10, 5));
+                    _participantes.push_back(new Bruxo(nome, 100, 15, 5));
                     break;
                 case 5:
-                    _participantes.push_back(new Bardo(nome, 100, 10, 5));
+                    _participantes.push_back(new Bardo(nome, 100, 15, 5));
                     break;
                 case 6:
-                    _participantes.push_back(new Arqueiro(nome, 100, 10, 5));
+                    _participantes.push_back(new Arqueiro(nome, 100, 15, 5));
                     break;
             }
         }
@@ -316,6 +264,7 @@ class JogoRPG {
                 }
             }
         }
+        exibirVencedor();
     }
 
     void exibirRodadas(Personagem *p1, Personagem *p2, int numRounds)
@@ -328,12 +277,12 @@ class JogoRPG {
 
     void combate(Personagem *p1, Personagem *p2)
     {
-        int numRounds = 0;
+        int numRounds = 1;
         srand(rand() % 100 + 1);
         int iniciativa = rand() % 2;
         while(p1->estaVivo() && p2->estaVivo() && numRounds < 10) {
             if(iniciativa == 0) {
-                exibirRodadas(p1, p2, numRounds+1);
+                exibirRodadas(p1, p2, numRounds);
                 p1->atacar(p2);
                 p2->atacar(p1);
                 if(p1->getSangramento() > 0) {
@@ -345,7 +294,7 @@ class JogoRPG {
                 system("pause");
             }
             else {
-                exibirRodadas(p1, p2, numRounds+1);
+                exibirRodadas(p1, p2, numRounds);
                 p2->atacar(p1);
                 p1->atacar(p2);
                 if(p1->getSangramento() > 0) {
@@ -400,6 +349,28 @@ class JogoRPG {
                 cout << p2->getNome() << " venceu!" << endl;
                 p2->exibirAtual();
                 p2->resetar();
+            }
+        }
+    }
+
+    void exibirVencedor()
+    {
+        int numParticipantes = _participantes.size();
+        for(int i = 0; i < numParticipantes; i++) {
+            if(_participantes[i]->estaVivo()) {
+                system("cls");
+                cout << "         " << _participantes[i]->getNome() << " venceu o torneio!" << endl;
+                // printar troféu em ascii
+                cout << "             ___________" << endl;
+                cout << "            '._==_==_=_.'" << endl;
+                cout << "            .-\\:      /-." << endl;
+                cout << "           | (|:.     |) |" << endl;
+                cout << "            '-|:.     |-'" << endl;
+                cout << "              \\::.    /" << endl;
+                cout << "               '::. .'" << endl;
+                cout << "                 ) (" << endl;
+                cout << "               _.' '._" << endl;
+                _participantes[i]->exibirTotal();
             }
         }
     }
