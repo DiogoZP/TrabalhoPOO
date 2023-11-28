@@ -240,6 +240,20 @@ class Dungeon {
         Item("Botas de Couro", "Comum", 0, 0, 0, 2),
     };
 
+    vector<Item> raros{
+        Item("Armadura de Ferro", "Raro", 4, 0, 0, 0),
+        Item("Espada de Ferro", "Raro", 0, 4, 0, 0),
+        Item("Escudo de Ferro", "Raro", 0, 0, 4, 0),
+        Item("Botas Velozes", "Raro", 0, 0, 0, 4),
+    };
+
+    vector<Item> epicos{
+        Item("Armadura de Ouro", "Epico", 6, 0, 0, 0),
+        Item("Espada de Ouro", "Epico", 0, 6, 0, 0),
+        Item("Escudo de Ouro", "Epico", 0, 0, 6, 0),
+        Item("Botas de Hermes", "Epico", 0, 0, 0, 6),
+    };
+
     int mapa[10][15] = 
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -247,12 +261,75 @@ class Dungeon {
         {1,0,1,0,0,0,1,0,0,0,1,0,0,0,1},
         {1,0,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,0,1,0,0,0,0,0,1,0,0,0,0,0,1},
-        {1,0,1,1,1,1,1,0,1,0,0,0,0,0,1},
+        {1,0,1,1,1,1,1,0,1,0,4,0,4,0,1},
         {1,0,0,0,0,0,1,0,1,0,0,0,0,0,1},
         {1,1,1,0,1,0,1,0,1,1,1,1,0,1,1},
         {1,2,0,0,1,0,0,0,0,0,0,0,0,3,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     };
+    
+    void sortearItem(Personagem *p) {
+        srand(time(NULL));
+        int r = rand() % 20 + 1;
+        if(r <= 10) {
+            int i = rand() % comuns.size();
+            system("cls");
+            cout << "Voce encontrou: " << comuns[i].getNome() << endl;
+            if (comuns[i].getHp() > 0) {
+                cout << "HP: +" << comuns[i].getHp() << endl;
+            }
+            if (comuns[i].getAtk() > 0) {
+                cout << "Ataque: +" << comuns[i].getAtk() << endl;
+            }
+            if (comuns[i].getDef() > 0) {
+                cout << "Defesa: +" << comuns[i].getDef() << endl;
+            }
+            if (comuns[i].getVel() > 0) {
+                cout << "Velocidade: +" << comuns[i].getVel() << endl;
+            }
+            p->adicionarItem(comuns[i]);
+            system("pause");
+        }
+        else if(r <= 17) {
+            int i = rand() % raros.size();
+            system("cls");
+            cout << "Voce encontrou: " << raros[i].getNome() << endl;
+            if (raros[i].getHp() > 0) {
+                cout << "HP: +" << raros[i].getHp() << endl;
+            }
+            if (raros[i].getAtk() > 0) {
+                cout << "Ataque: +" << raros[i].getAtk() << endl;
+            }
+            if (raros[i].getDef() > 0) {
+                cout << "Defesa: +" << raros[i].getDef() << endl;
+            }
+            if (raros[i].getVel() > 0) {
+                cout << "Velocidade: +" << raros[i].getVel() << endl;
+            }
+            p->adicionarItem(raros[i]);
+            system("pause");
+        }
+        else {
+            int i = rand() % epicos.size();
+            system("cls");
+            cout << "Voce encontrou: " << epicos[i].getNome() << endl;
+            if (epicos[i].getHp() > 0) {
+                cout << "HP: +" << epicos[i].getHp() << endl;
+            }
+            if (epicos[i].getAtk() > 0) {
+                cout << "Ataque: +" << epicos[i].getAtk() << endl;
+            }
+            if (epicos[i].getDef() > 0) {
+                cout << "Defesa: +" << epicos[i].getDef() << endl;
+            }
+            if (epicos[i].getVel() > 0) {
+                cout << "Velocidade: +" << epicos[i].getVel() << endl;
+            }
+            p->adicionarItem(epicos[i]);
+            system("pause");
+        }
+    }
+
     void exibirMapa() {
         system("cls");
         for(int i=0; i<10; i++) {
@@ -261,7 +338,7 @@ class Dungeon {
                     cout << " ";
                 }
                 else if(mapa[i][j] == 1) {
-                    cout << "#";
+                    cout << char(219);
                 }
                 else if(mapa[i][j] == 2) {
                     cout << "O";
@@ -270,7 +347,7 @@ class Dungeon {
                     cout << "B";
                 }
                 else if(mapa[i][j] == 4) {
-                    cout << "I";
+                    cout << "\033[1;31mX\033[0m";
                 }
                 else if(mapa[i][j] == 5) {
                     cout << "X";
@@ -290,12 +367,56 @@ class Dungeon {
                 mapa[y-1][x] = 2;
                 p->mover(x, y-1);
             }
+            else if(mapa[y-1][x] == 3) {
+                mapa[y][x] = 0;
+                mapa[y-1][x] = 2;
+                p->mover(x, y-1);
+                sortearItem(p);
+            }
+            else if(mapa[y-1][x] == 4) {
+                mapa[y][x] = 0;
+                mapa[y-1][x] = 2;
+                p->mover(x, y-1);
+                combate(p, new Guerreiro("Goblin", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
+            else if(mapa[y-1][x] == 5) {
+                mapa[y][x] = 0;
+                mapa[y-1][x] = 2;
+                p->mover(x, y-1);
+                combate(p, new Guerreiro("Orc", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
         }
         else if(dir == 's') {
             if(mapa[y+1][x] == 0) {
                 mapa[y][x] = 0;
                 mapa[y+1][x] = 2;
                 p->mover(x, y+1);
+            }
+            else if(mapa[y+1][x] == 3) {
+                mapa[y][x] = 0;
+                mapa[y+1][x] = 2;
+                p->mover(x, y+1);
+                sortearItem(p);
+            }
+            else if(mapa[y+1][x] == 4) {
+                mapa[y][x] = 0;
+                mapa[y+1][x] = 2;
+                p->mover(x, y+1);
+                combate(p, new Guerreiro("Goblin", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
+            else if(mapa[y+1][x] == 5) {
+                mapa[y][x] = 0;
+                mapa[y+1][x] = 2;
+                p->mover(x, y+1);
+                combate(p, new Guerreiro("Orc", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
             }
         }
         else if(dir == 'a') {
@@ -304,12 +425,56 @@ class Dungeon {
                 mapa[y][x-1] = 2;
                 p->mover(x-1, y);
             }
+            else if(mapa[y][x-1] == 3) {
+                mapa[y][x] = 0;
+                mapa[y][x-1] = 2;
+                p->mover(x-1, y);
+                sortearItem(p);
+            }
+            else if(mapa[y][x-1] == 4) {
+                mapa[y][x] = 0;
+                mapa[y][x-1] = 2;
+                p->mover(x-1, y);
+                combate(p, new Guerreiro("Goblin", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
+            else if(mapa[y][x-1] == 5) {
+                mapa[y][x] = 0;
+                mapa[y][x-1] = 2;
+                p->mover(x-1, y);
+                combate(p, new Guerreiro("Orc", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
         }
         else if(dir == 'd') {
             if(mapa[y][x+1] == 0) {
                 mapa[y][x] = 0;
                 mapa[y][x+1] = 2;
                 p->mover(x+1, y);
+            }
+            else if(mapa[y][x+1] == 3) {
+                mapa[y][x] = 0;
+                mapa[y][x+1] = 2;
+                p->mover(x+1, y);
+                sortearItem(p);
+            }
+            else if(mapa[y][x+1] == 4) {
+                mapa[y][x] = 0;
+                mapa[y][x+1] = 2;
+                p->mover(x+1, y);
+                combate(p, new Guerreiro("Goblin", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
+            }
+            else if(mapa[y][x+1] == 5) {
+                mapa[y][x] = 0;
+                mapa[y][x+1] = 2;
+                p->mover(x+1, y);
+                combate(p, new Guerreiro("Orc", 30, 10, 10, 10));
+                sortearItem(p);
+                p->resetar();
             }
         }
         else if(dir == 'i') {
@@ -369,13 +534,9 @@ class Dungeon {
     }
 };
 
-
-
-
-
 int main(){
     Dungeon d;
-    Guerreiro g("Guerreiro", 20, 5, 5, 5);
+    Guerreiro g("Guerreiro", 30, 15, 15, 15);
     char dir;
     while(1){
         d.exibirMapa();
